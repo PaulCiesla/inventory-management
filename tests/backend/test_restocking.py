@@ -145,3 +145,36 @@ class TestRestockingOrderSubmission:
         response = client.post("/api/restocking/orders", json={"items": [], "budget": 100})
         assert response.status_code == 400
         assert "detail" in response.json()
+
+    def test_category_filter_survives_submitted_order(self, client):
+        """Filtering by category must not break once a restock order exists.
+
+        Regression: submitted orders store category as an explicit None, and apply_filters
+        used item.get('category', '').lower(). The '' default never fires for a key that is
+        present with value None, so a single restock order made every category-filtered
+        request raise AttributeError -> HTTP 500 for the life of the process.
+        """
+        client.post("/api/restocking/orders", json=self._sample_payload())
+
+        response = client.get("/api/orders?category=Sensors")
+        assert response.status_code == 200
+        # The category-less restock order must simply be excluded, not blow up the request
+        for order in response.json():
+            assert (order.get("category") or "").lower() == "sensors"
+
+    def test_dashboard_category_filter_survives_submitted_order(self, client):
+        """The dashboard shares apply_filters, so it must survive the same case."""
+        client.post("/api/restocking/orders", json=self._sample_payload())
+
+        response = client.get("/api/dashboard/summary?category=Sensors")
+        assert response.status_code == 200
+        assert "total_orders_value" in response.json()
+
+    def test_warehouse_filter_survives_submitted_order(self, client):
+        """Same for warehouse, which submitted orders also store as None."""
+        client.post("/api/restocking/orders", json=self._sample_payload())
+
+        response = client.get("/api/orders?warehouse=Tokyo")
+        assert response.status_code == 200
+        for order in response.json():
+            assert order["warehouse"] == "Tokyo"

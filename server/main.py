@@ -40,11 +40,14 @@ def apply_filters(items: list, warehouse: Optional[str] = None, category: Option
     if warehouse and warehouse != 'all':
         filtered = [item for item in filtered if item.get('warehouse') == warehouse]
 
+    # `or ''` rather than a get() default: restocking orders store category/warehouse as an
+    # explicit None, so the key exists and the default never fires — .lower() on None then
+    # 500s every category-filtered request for the life of the process.
     if category and category != 'all':
-        filtered = [item for item in filtered if item.get('category', '').lower() == category.lower()]
+        filtered = [item for item in filtered if (item.get('category') or '').lower() == category.lower()]
 
     if status and status != 'all':
-        filtered = [item for item in filtered if item.get('status', '').lower() == status.lower()]
+        filtered = [item for item in filtered if (item.get('status') or '').lower() == status.lower()]
 
     return filtered
 
