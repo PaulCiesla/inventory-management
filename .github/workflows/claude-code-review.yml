@@ -38,10 +38,9 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           plugin_marketplaces: "https://github.com/anthropics/claude-code.git"
           plugins: "code-review@claude-code-plugins"
-          prompt: "/code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
-          # TEMPORARY (diagnostic): the review runs clean but posts nothing, and the tool-permission
-          # denials that explain why are invisible while output is hidden. Revert this once the
-          # denied tool names are known — it puts the full agent transcript in public Actions logs.
-          show_full_output: true
+          # --comment makes the plugin post its findings to the PR. Without it the review still
+          # runs to completion but only returns prose in the action result, which nothing reads —
+          # that is why runs looked green while every PR stayed at zero comments.
+          prompt: "/code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }} --comment"
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
