@@ -47,8 +47,5 @@ jobs:
           # with "This command requires approval". Without these, --comment tells the plugin to
           # post and the post is then denied, so the run still ends with zero comments.
           claude_args: '--allowed-tools "Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh search:*)"'
-          # TEMPORARY: re-enabled to confirm the post path. Remove in the follow-up once a review
-          # lands — it writes the full agent transcript to public Actions logs.
-          show_full_output: true
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
