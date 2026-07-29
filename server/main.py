@@ -4,7 +4,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 import hashlib
-from mock_data import inventory_items, orders, demand_forecasts, backlog_items, spending_summary, monthly_spending, category_spending, recent_transactions, purchase_orders, tasks
+from mock_data import inventory_items, orders, demand_forecasts, backlog_items, spending_summary, monthly_spending, category_spending, recent_transactions, purchase_orders, tasks, restocking_orders
 
 app = FastAPI(title="Factory Inventory Management System")
 
@@ -260,9 +260,11 @@ def create_restocking_order(request: RestockingOrderRequest):
     if not request.items:
         raise HTTPException(status_code=400, detail="At least one item is required")
 
-    # Generate the next numeric id. The isdigit() guard avoids a crash if a
-    # non-numeric id ever ends up in the list (all seed ids are "1".."250").
-    next_id = max((int(o["id"]) for o in orders if str(o.get("id", "")).isdigit()), default=250) + 1
+    # Generate the next numeric id across both lists, so restock ids never collide with
+    # customer order ids. The isdigit() guard avoids a crash if a non-numeric id ever
+    # ends up in either list (all seed ids are "1".."250").
+    known_ids = [o for o in list(orders) + list(restocking_orders) if str(o.get("id", "")).isdigit()]
+    next_id = max((int(o["id"]) for o in known_ids), default=250) + 1
 
     order_date = datetime.now().date()
     # Order isn't complete until the slowest item arrives, so lead time = max of the items'.
@@ -287,10 +289,20 @@ def create_restocking_order(request: RestockingOrderRequest):
         "category": None,
     }
 
-    # Append to the module-level list: persists across requests within the running
-    # process (lost on restart — acceptable for this demo, no database).
-    orders.append(new_order)
+    # Deliberately NOT appended to `orders`: that list backs /api/dashboard/summary,
+    # /api/reports/*, and the client-side product revenue rollups, so putting procurement
+    # spend there reported it as customer revenue. Read it back via GET /api/restocking/orders.
+    # Persists across requests within the running process (lost on restart — no database).
+    restocking_orders.append(new_order)
     return new_order
+
+@app.get("/api/restocking/orders", response_model=List[Order])
+def get_restocking_orders():
+    """Get submitted internal restock orders.
+
+    Separate from /api/orders so no revenue aggregation can pick these up by accident.
+    """
+    return restocking_orders
 
 @app.get("/api/backlog", response_model=List[BacklogItem])
 def get_backlog():

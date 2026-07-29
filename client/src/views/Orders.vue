@@ -173,11 +173,11 @@ export default {
       }
     }
 
-    // Submitted restock orders are dated in 2026 and must stay visible regardless of the
-    // global month/quarter filter, so fetch them separately without any filters applied.
+    // Restock orders live in their own collection so procurement spend never reaches the
+    // revenue aggregations, and they stay visible regardless of the global month filter.
     const loadSubmittedOrders = async () => {
       try {
-        const fetchedSubmitted = await api.getOrders({ status: 'Submitted' })
+        const fetchedSubmitted = await api.getRestockingOrders()
 
         // Sort by order_date (earliest first)
         submittedOrders.value = fetchedSubmitted.sort((a, b) => {

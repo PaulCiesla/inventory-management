@@ -6,6 +6,22 @@ from datetime import date, timedelta
 
 import pytest
 
+import mock_data
+
+
+@pytest.fixture(autouse=True)
+def reset_order_lists():
+    """Restore both order lists per test.
+
+    Submitting a restock order mutates module-level state, so without this the submitted
+    orders leak across the whole session and into other test files' assertions.
+    """
+    original_orders = list(mock_data.orders)
+    original_restocking = list(mock_data.restocking_orders)
+    yield
+    mock_data.orders[:] = original_orders
+    mock_data.restocking_orders[:] = original_restocking
+
 
 class TestEnrichedDemandEndpoint:
     """Test suite for GET /api/demand/enriched."""
@@ -122,16 +138,34 @@ class TestRestockingOrderSubmission:
         max_lead = max(i["lead_time_days"] for i in payload["items"])
         assert expected_delivery == order_date + timedelta(days=max_lead)
 
-    def test_submitted_order_appears_in_orders_list(self, client):
-        """A submitted order is retrievable via GET /api/orders?status=Submitted."""
+    def test_submitted_order_appears_in_restocking_list(self, client):
+        """A submitted order is retrievable via GET /api/restocking/orders."""
         created = client.post("/api/restocking/orders", json=self._sample_payload()).json()
 
-        listed = client.get("/api/orders?status=Submitted").json()
+        listed = client.get("/api/restocking/orders").json()
         order_numbers = [o["order_number"] for o in listed]
         assert created["order_number"] in order_numbers
         # All returned orders carry the Submitted status
         for o in listed:
             assert o["status"] == "Submitted"
+
+    def test_submitted_order_stays_out_of_orders_list(self, client):
+        """Restock orders must not surface in /api/orders, which backs the revenue math."""
+        created = client.post("/api/restocking/orders", json=self._sample_payload()).json()
+
+        listed = client.get("/api/orders").json()
+        assert created["order_number"] not in [o["order_number"] for o in listed]
+
+    def test_restock_order_ids_do_not_collide_with_orders(self, client):
+        """Ids are allocated across both lists so a restock never reuses a customer order id."""
+        existing_ids = {o["id"] for o in client.get("/api/orders").json()}
+
+        first = client.post("/api/restocking/orders", json=self._sample_payload()).json()
+        second = client.post("/api/restocking/orders", json=self._sample_payload()).json()
+
+        assert first["id"] not in existing_ids
+        assert second["id"] not in existing_ids
+        assert first["id"] != second["id"]
 
     def test_orders_list_still_valid_after_submission(self, client):
         """Appended order must not break the List[Order]-validated /api/orders."""
@@ -178,3 +212,56 @@ class TestRestockingOrderSubmission:
         assert response.status_code == 200
         for order in response.json():
             assert order["warehouse"] == "Tokyo"
+
+
+class TestRestockingRevenueIsolation:
+    """Restock spend must never be aggregated as revenue.
+
+    Regression: restock orders were appended to the same `orders` list that backs every
+    revenue figure, so buying parts inflated reported earnings.
+    """
+
+    def _payload(self):
+        return {
+            "items": [
+                {"sku": "WDG-001", "name": "Industrial Widget Type A",
+                 "quantity": 100, "unit_price": 250.0, "lead_time_days": 10},
+            ],
+            "budget": 100000,
+        }
+
+    def test_dashboard_revenue_unchanged(self, client):
+        """total_orders_value backs the Revenue YTD/MTD tile and its goal bar."""
+        before = client.get("/api/dashboard/summary").json()["total_orders_value"]
+
+        created = client.post("/api/restocking/orders", json=self._payload()).json()
+        assert created["total_value"] == 25000.0
+
+        after = client.get("/api/dashboard/summary").json()["total_orders_value"]
+        assert after == before
+
+    def test_monthly_trends_bucket_count_unchanged(self, client):
+        """A new month bucket would skew Reports' avgMonthlyRevenue (total / bucket count)."""
+        before = client.get("/api/reports/monthly-trends").json()
+        client.post("/api/restocking/orders", json=self._payload())
+        after = client.get("/api/reports/monthly-trends").json()
+
+        assert len(after) == len(before)
+        assert [m["revenue"] for m in after] == [m["revenue"] for m in before]
+
+    def test_quarterly_report_unchanged(self, client):
+        """Quarterly hardcodes 2025, so contamination here desyncs it from monthly-trends."""
+        before = client.get("/api/reports/quarterly").json()
+        client.post("/api/restocking/orders", json=self._payload())
+        after = client.get("/api/reports/quarterly").json()
+
+        assert after == before
+
+    def test_orders_endpoint_revenue_unchanged(self, client):
+        """Dashboard.vue rolls up product revenue client-side from /api/orders."""
+        def orders_total():
+            return sum(o["total_value"] for o in client.get("/api/orders").json())
+
+        before = orders_total()
+        client.post("/api/restocking/orders", json=self._payload())
+        assert orders_total() == before
