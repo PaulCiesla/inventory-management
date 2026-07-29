@@ -35,5 +35,15 @@ recent_transactions = load_json_file('transactions.json')
 # Load purchase orders
 purchase_orders = load_json_file('purchase_orders.json')
 
+# Load tasks. Seeded empty — tasks are created at runtime and, like every other
+# collection here, only live in memory (a restart drops them).
+tasks = load_json_file('tasks.json')
+
+# Internal restock orders, kept out of `orders` on purpose. Every revenue figure in the
+# app aggregates `orders`, so storing procurement spend there reported money spent as
+# money earned. Separate list means the revenue math is correct by construction rather
+# than by every caller remembering to filter.
+restocking_orders = load_json_file('restocking_orders.json')
+
 # All data is now loaded from JSON files in the data/ directory
 # This allows for easier maintenance and updates of the sample data

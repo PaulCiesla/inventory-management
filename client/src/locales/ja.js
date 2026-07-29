@@ -6,6 +6,7 @@ export default {
     orders: '注文',
     finance: '財務',
     demandForecast: '需要予測',
+    restocking: '補充',
     companyName: '触媒コンポーネンツ',
     subtitle: '在庫管理システム'
   },
@@ -106,6 +107,8 @@ export default {
     title: '注文',
     description: '顧客注文の表示と管理',
     allOrders: 'すべての注文',
+    submittedOrders: '発注済み注文',
+    leadTime: 'リードタイム',
     totalOrders: '総注文数',
     totalRevenue: '総収益',
     avgOrderValue: '平均注文額',
@@ -204,9 +207,33 @@ export default {
     shipped: '出荷済み',
     processing: '処理中',
     backordered: 'バックオーダー',
+    submitted: '発注済み',
     inStock: '在庫あり',
     lowStock: '在庫僅少',
     adequate: '適量'
+  },
+
+  // Restocking
+  restocking: {
+    title: '補充',
+    description: '予算を設定し、需要予測から補充する推奨アイテムを取得します',
+    budgetLabel: '利用可能な予算',
+    recommendations: '推奨アイテム',
+    itemsSelected: '{count}件選択',
+    unitCost: '単価',
+    quantity: '数量',
+    lineTotal: '小計',
+    leadTime: 'リードタイム',
+    days: '日',
+    trend: '傾向',
+    estimatedTotal: '見積合計',
+    placeOrder: '発注する',
+    placingOrder: '発注中...',
+    noRecommendations: '現在の予測では補充が必要なアイテムはありません。',
+    budgetTooLow: '予算が不足しています — 最も安いアイテムには{amount}が必要です。',
+    orderPlaced: '補充注文 {orderNumber} が正常に発注されました。',
+    viewInOrders: '注文で表示',
+    synthesizedNote: '推定価格'
   },
 
   // Trends
@@ -302,6 +329,32 @@ export default {
     dueDate: '期限',
     addTask: 'タスクを追加',
     noTasks: 'タスクがありません。上記からタスクを追加してください！'
+  },
+  purchaseOrder: {
+    createTitle: '発注書の作成',
+    viewTitle: '発注書',
+    item: '品目名',
+    sku: 'SKU',
+    shortage: '不足',
+    supplier: '仕入先',
+    supplierPlaceholder: '仕入先名を入力...',
+    quantity: '数量',
+    unitCost: '単価',
+    unitCostInput: '単価（USD）',
+    expectedDelivery: '納品予定日',
+    notes: '備考',
+    notesPlaceholder: '任意の備考...',
+    total: '合計',
+    poNumber: '発注番号',
+    status: 'ステータス',
+    createdDate: '作成日',
+    create: '発注書を作成',
+    creating: '作成中...',
+    cancel: 'キャンセル',
+    close: '閉じる',
+    loading: '発注書を読み込み中...',
+    loadError: '発注書を読み込めませんでした。',
+    createError: '発注書を作成できませんでした。'
   },
 
   // Language

@@ -6,6 +6,7 @@ export default {
     orders: 'Orders',
     finance: 'Finance',
     demandForecast: 'Demand Forecast',
+    restocking: 'Restocking',
     companyName: 'Catalyst Components',
     subtitle: 'Inventory Management System'
   },
@@ -106,6 +107,8 @@ export default {
     title: 'Orders',
     description: 'View and manage customer orders',
     allOrders: 'All Orders',
+    submittedOrders: 'Submitted Orders',
+    leadTime: 'Lead Time',
     totalOrders: 'Total Orders',
     totalRevenue: 'Total Revenue',
     avgOrderValue: 'Avg Order Value',
@@ -204,9 +207,33 @@ export default {
     shipped: 'Shipped',
     processing: 'Processing',
     backordered: 'Backordered',
+    submitted: 'Submitted',
     inStock: 'In Stock',
     lowStock: 'Low Stock',
     adequate: 'Adequate'
+  },
+
+  // Restocking
+  restocking: {
+    title: 'Restocking',
+    description: 'Set a budget and get recommended items to restock from the demand forecast',
+    budgetLabel: 'Available Budget',
+    recommendations: 'Recommended Items',
+    itemsSelected: '{count} items selected',
+    unitCost: 'Unit Cost',
+    quantity: 'Qty',
+    lineTotal: 'Line Total',
+    leadTime: 'Lead Time',
+    days: 'days',
+    trend: 'Trend',
+    estimatedTotal: 'Estimated Total',
+    placeOrder: 'Place Order',
+    placingOrder: 'Placing order...',
+    noRecommendations: 'No items need restocking within the current forecast.',
+    budgetTooLow: 'Budget too low — the cheapest item needs {amount}.',
+    orderPlaced: 'Restocking order {orderNumber} placed successfully.',
+    viewInOrders: 'View in Orders',
+    synthesizedNote: 'estimated price'
   },
 
   // Trends
@@ -302,6 +329,34 @@ export default {
     dueDate: 'Due Date',
     addTask: 'Add Task',
     noTasks: 'No tasks yet. Add your first task above!'
+  },
+  purchaseOrder: {
+    createTitle: 'Create Purchase Order',
+    viewTitle: 'Purchase Order',
+    item: 'Item',
+    sku: 'SKU',
+    shortage: 'Shortage',
+    supplier: 'Supplier',
+    supplierPlaceholder: 'Enter supplier name...',
+    quantity: 'Quantity',
+    unitCost: 'Unit Cost',
+    // Form input is always keyed in USD — the backend stores USD and the
+    // display currency converts on read.
+    unitCostInput: 'Unit Cost (USD)',
+    expectedDelivery: 'Expected Delivery',
+    notes: 'Notes',
+    notesPlaceholder: 'Optional notes...',
+    total: 'Total',
+    poNumber: 'PO Number',
+    status: 'Status',
+    createdDate: 'Created',
+    create: 'Create Purchase Order',
+    creating: 'Creating...',
+    cancel: 'Cancel',
+    close: 'Close',
+    loading: 'Loading purchase order...',
+    loadError: 'Could not load the purchase order.',
+    createError: 'Could not create the purchase order.'
   },
 
   // Language
